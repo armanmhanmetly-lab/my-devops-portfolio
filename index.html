@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alex Morgan</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #2a2a3a;
+      --green: #00ff88;
+      --blue: #4488ff;
+      --white: #eeeef5;
+      --dim: #6666aa;
+      --mono: 'Space Mono', monospace;
+      --sans: 'Syne', sans-serif;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+      min-height: 100vh;
+      cursor: crosshair;
+    }
+
+    /* scanline effect */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,.08) 2px,
+        rgba(0,0,0,.08) 4px
+      );
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .terminal {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      padding: .6rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      margin-bottom: 2.5rem;
+      animation: flicker .1s ease;
+    }
+
+    .dot-row { display: flex; gap: 6px; }
+    .tdot { width: 10px; height: 10px; border-radius: 50%; }
+    .tdot.r { background: #ff5f57; }
+    .tdot.y { background: #febc2e; }
+    .tdot.g { background: #28c840; }
+
+    .bar-title {
+      flex: 1;
+      text-align: center;
+      font-size: 11px;
+      color: var(--dim);
+      letter-spacing: .12em;
+    }
+
+    /* ── PROMPT LINE ── */
+    .prompt {
+      color: var(--dim);
+      font-size: 12px;
+      margin-bottom: .3rem;
+    }
+    .prompt span { color: var(--green); }
+    .prompt b { color: var(--blue); }
+
+    /* ── HEADER ── */
+    .header-block {
+      margin-bottom: 3rem;
+      animation: slideIn .5s ease both;
+    }
+
+    .ascii-name {
+      font-family: var(--sans);
+      font-size: clamp(2.8rem, 9vw, 5.5rem);
+      font-weight: 800;
+      line-height: .95;
+      letter-spacing: -.03em;
+      color: var(--white);
+      position: relative;
+      display: inline-block;
+    }
+
+    .ascii-name::before {
+      content: attr(data-text);
+      position: absolute;
+      inset: 0;
+      color: var(--green);
+      clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+      transform: translateX(3px);
+      opacity: .6;
+    }
+
+    .title-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      margin-top: 1rem;
+      border: 1px solid var(--green);
+      color: var(--green);
+      font-size: 11px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+    }
+
+    .blink {
+      display: inline-block;
+      width: 8px; height: 14px;
+      background: var(--green);
+      animation: blink .9s step-end infinite;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+
+    /* ── SECTIONS ── */
+    .section {
+      margin-bottom: 2.5rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      animation: slideIn .5s ease both;
+    }
+
+    .section:nth-child(3) { animation-delay: .1s; }
+    .section:nth-child(4) { animation-delay: .2s; }
+
+    .sec-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: .55rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(68,136,255,.06);
+    }
+
+    .sec-num { font-size: 10px; color: var(--blue); letter-spacing: .1em; }
+    .sec-title { font-size: 11px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; color: var(--white); }
+    .sec-line { flex: 1; height: 1px; background: var(--border); }
+
+    .sec-body { padding: 1.4rem 1.2rem; }
+
+    /* Bio */
+    .bio-text {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: #b0b0cc;
+      line-height: 1.85;
+      max-width: 68ch;
+    }
+
+    .bio-text .hi { color: var(--green); }
+    .bio-text .hl { color: var(--white); font-style: italic; }
+
+    /* Skills */
+    .skill-row {
+      display: grid;
+      grid-template-columns: 1.8rem 1fr 7rem;
+      align-items: center;
+      gap: 1rem;
+      padding: .75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .skill-row:last-child { border-bottom: none; }
+
+    .skill-idx { color: var(--blue); font-size: 11px; }
+
+    .skill-label {
+      font-family: var(--sans);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .progress-wrap { display: flex; flex-direction: column; gap: 3px; }
+
+    .progress-bar {
+      height: 3px;
+      background: var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      background: var(--green);
+      animation: grow 1.2s cubic-bezier(.4,0,.2,1) both;
+    }
+
+    .progress-fill.b2 { animation-delay: .15s; }
+    .progress-fill.b3 { animation-delay: .3s; }
+
+    .progress-label { font-size: 9px; color: var(--dim); letter-spacing: .1em; text-align: right; }
+
+    /* ── FOOTER ── */
+    footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .8rem;
+      padding: .8rem 1rem;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      animation: slideIn .5s .3s ease both;
+    }
+
+    .deploy { font-size: 11px; color: var(--dim); letter-spacing: .1em; }
+    .deploy strong { color: var(--green); }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 10px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--green);
+    }
+
+    .pulse-dot {
+      width: 7px; height: 7px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: pulse 1.8s ease infinite;
+    }
+
+    /* ── KEYFRAMES ── */
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
+    @keyframes flicker { 0% { opacity: .85; } 100% { opacity: 1; } }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes grow { from { width: 0; } }
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(0,255,136,.5); }
+      50%     { box-shadow: 0 0 0 6px rgba(0,255,136,0); }
+    }
+
+    @media (max-width: 500px) {
+      .skill-row { grid-template-columns: 1.6rem 1fr; }
+      .progress-wrap { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="terminal">
+
+  <div class="topbar">
+    <div class="dot-row">
+      <div class="tdot r"></div>
+      <div class="tdot y"></div>
+      <div class="tdot g"></div>
+    </div>
+    <div class="bar-title">alex_morgan — portfolio.sh</div>
+  </div>
+
+  <!-- HEADER -->
+  <div class="header-block">
+    <div class="prompt"><span>~/portfolio</span> <b>$</b> ./whoami</div>
+    <div class="ascii-name" data-text="Alex Morgan">Alex Morgan</div>
+    <div>
+      <div class="title-chip">Student Researcher<span class="blink"></span></div>
+    </div>
+  </div>
+
+  <!-- BIO -->
+  <div class="section">
+    <div class="sec-header">
+      <span class="sec-num">[01]</span>
+      <span class="sec-title">Bio</span>
+      <div class="sec-line"></div>
+    </div>
+    <div class="sec-body">
+      <p class="bio-text">
+        <span class="hi">// about me</span><br><br>
+        I'm an Information Systems student exploring how
+        <span class="hl">data architecture and human behaviour</span>
+        intersect. My interests span database design, UX research,
+        and the ethical use of intelligent systems — building digital
+        infrastructure that is efficient, transparent, and genuinely
+        human-centred. Currently focused on how organisations can make
+        <span class="hl">better decisions through better data</span>.
+      </p>
+    </div>
+  </div>
+
+  <!-- SKILLS -->
+  <div class="section">
+    <div class="sec-header">
+      <span class="sec-num">[02]</span>
+      <span class="sec-title">Skills // Currently Learning</span>
+      <div class="sec-line"></div>
+    </div>
+    <div class="sec-body">
+
+      <div class="skill-row">
+        <span class="skill-idx">01</span>
+        <span class="skill-label">SQL &amp; Relational Databases</span>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill" style="width:62%"></div></div>
+          <span class="progress-label">62% complete</span>
+        </div>
+      </div>
+
+      <div class="skill-row">
+        <span class="skill-idx">02</span>
+        <span class="skill-label">Python for Data Analysis</span>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill b2" style="width:48%"></div></div>
+          <span class="progress-label">48% complete</span>
+        </div>
+      </div>
+
+      <div class="skill-row">
+        <span class="skill-idx">03</span>
+        <span class="skill-label">UX Research &amp; Prototyping</span>
+        <div class="progress-wrap">
+          <div class="progress-bar"><div class="progress-fill b3" style="width:55%"></div></div>
+          <span class="progress-label">55% complete</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="deploy">Last Deployment: <strong>April 20, 2025</strong></div>
+    <div class="status-pill"><div class="pulse-dot"></div>Live</div>
+  </footer>
+
+</div>
+</body>
+</html>
